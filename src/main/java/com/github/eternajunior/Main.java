@@ -49,7 +49,7 @@ public class Main {
         longList.add(12L);
         longList.add(13L);
         longList.add(14L);
-       // developerRepository.save(developer2);
+        developerRepository.deleteById(28L);
 
         //System.out.println(developerRepository.count());
         //developerRepository.save(developer);

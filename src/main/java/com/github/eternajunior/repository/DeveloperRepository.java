@@ -11,18 +11,29 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class DeveloperRepository implements CrudRepository<Developer, Long> {
+    {
+        try {
+            if (!(new File("files\\developers.txt").exists())) {
+                new File("files\\developers.txt").createNewFile();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private final static String FILE_DEVELOPERS = "files\\developers.txt";
     private Gson gson = new Gson();
 
     @Override
     public <S extends Developer> S save(S saveDeveloper) {
+        Map<Long, Developer> developerMap = getAllDevelopers().stream()
+                .collect(Collectors.toMap(Developer::getId, developer -> developer));
         List<Developer> developersList = getAllDevelopers();
-        Map<Long, Developer> developerMap = new HashMap<>();
-        for (Developer developer : developersList) {
-            developerMap.put(developer.getId(), developer);
-        }
         if (saveDeveloper.getId() == null) {
-            saveDeveloper.setId(developersList.stream().max(Comparator.comparing(Developer::getId)).get().getId() + 1L);
+            saveDeveloper.setId(developersList.stream()
+                    .max(Comparator.comparing(Developer::getId))
+                    .get()
+                    .getId() + 1L);
             developerMap.put(saveDeveloper.getId(), saveDeveloper);
             developersList.add(saveDeveloper);
         } else {
@@ -40,14 +51,15 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
         for (Developer developer : developers) {
             developersSaveList.add(developer);
         }
+        Map<Long, Developer> developerMap = developersSaveList.stream()
+                .collect(Collectors.toMap(Developer::getId, developer -> developer));
         List<Developer> developersList = getAllDevelopers();
-        Map<Long, Developer> developerMap = new HashMap<>();
-        for (Developer developer : developersList) {
-            developerMap.put(developer.getId(), developer);
-        }
         for (Developer developer : developersSaveList) {
             if (developer.getId() == null) {
-                developer.setId(developersList.stream().max(Comparator.comparing(Developer::getId)).get().getId() + 1L);
+                developer.setId(developersList.stream()
+                        .max(Comparator.comparing(Developer::getId))
+                        .get()
+                        .getId() + 1L);
                 developerMap.put(developer.getId(), developer);
                 developersList.add(developer);
             } else {
@@ -61,35 +73,15 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
     }
 
     @Override
-    public Optional<Developer> findById(Long var1) {
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(FILE_DEVELOPERS))) {
-            while (bufferedReader.ready()) {
-                String str = bufferedReader.readLine();
-                Developer developer = gson.fromJson(str, Developer.class);
-                if (developer.getId() == var1) {
-                    return Optional.of(developer);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Optional.empty();
+    public Optional<Developer> findById(Long id) {
+        List<Developer> developerList = getAllDevelopers();
+        return developerList.stream().filter(developer -> developer.getId() == id).findFirst();
     }
 
     @Override
-    public boolean existById(Long var1) {
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(FILE_DEVELOPERS))) {
-            while (bufferedReader.ready()) {
-                String str = bufferedReader.readLine();
-                Developer developer = gson.fromJson(str, Developer.class);
-                if (developer.getId() == var1) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
+    public boolean existById(Long id) {
+        List<Developer> developerList = getAllDevelopers();
+        return developerList.stream().anyMatch(developer -> developer.getId() == id);
     }
 
     @Override
@@ -118,37 +110,14 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
 
     @Override
     public long count() {
-        long count = 0;
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get(FILE_DEVELOPERS))) {
-            count = reader.lines()
-                    .count();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return count;
+        return getAllDevelopers().size();
     }
 
     @Override
-    public void deleteById(Long var1) {
-        List<String> stringList = new ArrayList<>();
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(FILE_DEVELOPERS))) {
-            while (bufferedReader.ready()) {
-                String str = bufferedReader.readLine();
-                Developer developer = gson.fromJson(str, Developer.class);
-                if (developer.getId() != var1) {
-                    stringList.add(str);
-                }
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(FILE_DEVELOPERS))) {
-            for (int i = 0; i < stringList.size(); i++) {
-                bufferedWriter.write(stringList.get(i) + "\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void deleteById(Long id) {
+        List<Developer> allDevelopers = getAllDevelopers();
+        allDevelopers.removeIf(developer -> Objects.equals(developer.getId(), id));
+        printCollectionInFile(allDevelopers);
     }
 
     @Override
@@ -160,10 +129,7 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
     public void deleteAll(Iterable<? extends Developer> developers) {
         List<Developer> developersList = new ArrayList<>();
         List<Developer> deleteDeveloperList = new ArrayList<>();
-        Iterator<Developer> iterator = (Iterator<Developer>) developers.iterator();
-        while (iterator.hasNext()) {
-            deleteDeveloperList.add(iterator.next());
-        }
+        developers.forEach(deleteDeveloperList::add);
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(FILE_DEVELOPERS))) {
             while (bufferedReader.ready()) {
                 String str = bufferedReader.readLine();
@@ -174,13 +140,7 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
             e.printStackTrace();
         }
         developersList.removeAll(deleteDeveloperList);
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(FILE_DEVELOPERS))) {
-            for (Developer developer : developersList) {
-                bufferedWriter.write(gson.toJson(developer) + "\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        printCollectionInFile(developersList);
     }
 
     @Override
