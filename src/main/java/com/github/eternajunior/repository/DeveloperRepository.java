@@ -127,18 +127,9 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
 
     @Override
     public void deleteAll(Iterable<? extends Developer> developers) {
-        List<Developer> developersList = new ArrayList<>();
+        List<Developer> developersList = getAllDevelopers();
         List<Developer> deleteDeveloperList = new ArrayList<>();
         developers.forEach(deleteDeveloperList::add);
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(FILE_DEVELOPERS))) {
-            while (bufferedReader.ready()) {
-                String str = bufferedReader.readLine();
-                Developer developer = gson.fromJson(str, Developer.class);
-                developersList.add(developer);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         developersList.removeAll(deleteDeveloperList);
         printCollectionInFile(developersList);
     }
