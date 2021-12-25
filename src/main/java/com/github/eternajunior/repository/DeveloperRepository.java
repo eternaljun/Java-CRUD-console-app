@@ -75,13 +75,13 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
     @Override
     public Optional<Developer> findById(Long id) {
         List<Developer> developerList = getAllDevelopers();
-        return developerList.stream().filter(developer -> developer.getId() == id).findFirst();
+        return developerList.stream().filter(developer -> Objects.equals(developer.getId(), id)).findFirst();
     }
 
     @Override
     public boolean existById(Long id) {
         List<Developer> developerList = getAllDevelopers();
-        return developerList.stream().anyMatch(developer -> developer.getId() == id);
+        return developerList.stream().anyMatch(developer -> Objects.equals(developer.getId(), id));
     }
 
     @Override
@@ -97,7 +97,7 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
                 while (bufferedReader.ready()) {
                     String str = bufferedReader.readLine();
                     Developer developer = gson.fromJson(str, Developer.class);
-                    if (developer.getId() == id) {
+                    if (Objects.equals(developer.getId(), id)) {
                         developerList.add(developer);
                     }
                 }
