@@ -27,7 +27,7 @@ public class Main {
         account.setBalance(1231);
         account.setName("sanya");
         developer.setAccount(account);
-        developer.setId(25L);
+        //developer.setId(25L);
         Skill skill = new Skill();
         skill.setSkill("eblan321");
         Set<Skill> skillSet = new HashSet<>();
@@ -49,7 +49,7 @@ public class Main {
         longList.add(12L);
         longList.add(13L);
         longList.add(14L);
-        developerRepository.deleteById(28L);
+        developerRepository.save(developer);
 
         //System.out.println(developerRepository.count());
         //developerRepository.save(developer);

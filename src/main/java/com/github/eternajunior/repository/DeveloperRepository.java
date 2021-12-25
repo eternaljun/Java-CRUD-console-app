@@ -29,17 +29,8 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
         Map<Long, Developer> developerMap = getAllDevelopers().stream()
                 .collect(Collectors.toMap(Developer::getId, developer -> developer));
         List<Developer> developersList = getAllDevelopers();
-        if (saveDeveloper.getId() == null) {
-            saveDeveloper.setId(developersList.stream()
-                    .max(Comparator.comparing(Developer::getId))
-                    .get()
-                    .getId() + 1L);
-            developerMap.put(saveDeveloper.getId(), saveDeveloper);
-            developersList.add(saveDeveloper);
-        } else {
-            developerMap.put(saveDeveloper.getId(), saveDeveloper);
-        }
-        List<Developer> resultList = new ArrayList<Developer>(developerMap.values());
+        saveNewDeveloper(saveDeveloper, developerMap, developersList);
+        List<Developer> resultList = new ArrayList<>(developerMap.values());
         resultList.sort((o1, o2) -> (int) (o1.getId() - o2.getId()));
         printCollectionInFile(resultList);
         return saveDeveloper;
@@ -55,16 +46,7 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
                 .collect(Collectors.toMap(Developer::getId, developer -> developer));
         List<Developer> developersList = getAllDevelopers();
         for (Developer developer : developersSaveList) {
-            if (developer.getId() == null) {
-                developer.setId(developersList.stream()
-                        .max(Comparator.comparing(Developer::getId))
-                        .get()
-                        .getId() + 1L);
-                developerMap.put(developer.getId(), developer);
-                developersList.add(developer);
-            } else {
-                developerMap.put(developer.getId(), developer);
-            }
+            saveNewDeveloper(developer, developerMap, developersList);
         }
         List<Developer> resultList = new ArrayList<Developer>(developerMap.values());
         resultList.sort((o1, o2) -> (int) (o1.getId() - o2.getId()));
@@ -90,14 +72,14 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
     }
 
     @Override
-    public Iterable<Developer> findAllById(Iterable<Long> developers) {
+    public Iterable<Developer> findAllById(Iterable<Long> id) {
         List<Developer> developerList = new ArrayList<>();
-        for (Long id : developers) {
+        for (Long developerId : id) {
             try (BufferedReader bufferedReader = new BufferedReader(new FileReader(FILE_DEVELOPERS))) {
                 while (bufferedReader.ready()) {
                     String str = bufferedReader.readLine();
                     Developer developer = gson.fromJson(str, Developer.class);
-                    if (Objects.equals(developer.getId(), id)) {
+                    if (Objects.equals(developer.getId(), developerId)) {
                         developerList.add(developer);
                     }
                 }
@@ -164,6 +146,19 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+    private <S extends Developer> void saveNewDeveloper(S saveDeveloper, Map<Long, Developer> developerMap, List<Developer> developersList) {
+        Developer developer = new Developer();
+        developer.setId(0L);
+        if (saveDeveloper.getId() == null) {
+            saveDeveloper.setId(developersList.stream()
+                    .max(Comparator.comparing(Developer::getId)).orElse(developer)
+                    .getId() + 1L);
+            developerMap.put(saveDeveloper.getId(), saveDeveloper);
+            developersList.add(saveDeveloper);
+        } else {
+            developerMap.put(saveDeveloper.getId(), saveDeveloper);
         }
     }
 }
