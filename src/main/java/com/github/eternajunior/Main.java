@@ -44,12 +44,12 @@ public class Main {
         list.add(developer);
         list.add(developer2);
         Iterable<Developer> iterable = list;
-        //developerRepository.saveAll(iterable);
+        developerRepository.saveAll(iterable);
         List<Long> longList = new ArrayList<>();
         longList.add(12L);
         longList.add(13L);
         longList.add(14L);
-        developerRepository.save(developer);
+        //developerRepository.save();
 
         //System.out.println(developerRepository.count());
         //developerRepository.save(developer);

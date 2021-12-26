@@ -8,6 +8,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DeveloperRepository implements CrudRepository<Developer, Long> {
@@ -28,8 +29,11 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
     public <S extends Developer> S save(S saveDeveloper) {
         Map<Long, Developer> developerMap = getAllDevelopers().stream()
                 .collect(Collectors.toMap(Developer::getId, developer -> developer));
-        List<Developer> developersList = getAllDevelopers();
-        saveNewDeveloper(saveDeveloper, developerMap, developersList);
+        long maxId = developerMap.keySet().stream().max((o1, o2) -> (int) (o1 - o2)).orElse(0L);
+        if (saveDeveloper.getId() == null) {
+            saveDeveloper.setId(maxId + 1L);
+        }
+        developerMap.put(saveDeveloper.getId(), saveDeveloper);
         List<Developer> resultList = new ArrayList<>(developerMap.values());
         resultList.sort((o1, o2) -> (int) (o1.getId() - o2.getId()));
         printCollectionInFile(resultList);
@@ -38,17 +42,17 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
 
     @Override
     public <S extends Developer> Iterable<S> saveAll(Iterable<S> developers) {
-        List<Developer> developersSaveList = new ArrayList<>();
-        for (Developer developer : developers) {
-            developersSaveList.add(developer);
-        }
-        Map<Long, Developer> developerMap = developersSaveList.stream()
+        Map<Long, Developer> developerMap = getAllDevelopers().stream()
                 .collect(Collectors.toMap(Developer::getId, developer -> developer));
-        List<Developer> developersList = getAllDevelopers();
-        for (Developer developer : developersSaveList) {
-            saveNewDeveloper(developer, developerMap, developersList);
+        long maxId = developerMap.keySet().stream().max((o1, o2) -> (int) (o1 - o2)).orElse(0L);
+        for (Developer developer : developers) {
+            if (developer.getId() == null) {
+                developer.setId(maxId + 1L);
+                maxId++;
+            }
+            developerMap.put(developer.getId(), developer);
         }
-        List<Developer> resultList = new ArrayList<Developer>(developerMap.values());
+        List<Developer> resultList = new ArrayList<>(developerMap.values());
         resultList.sort((o1, o2) -> (int) (o1.getId() - o2.getId()));
         printCollectionInFile(resultList);
         return developers;
@@ -56,14 +60,12 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
 
     @Override
     public Optional<Developer> findById(Long id) {
-        List<Developer> developerList = getAllDevelopers();
-        return developerList.stream().filter(developer -> Objects.equals(developer.getId(), id)).findFirst();
+        return getAllDevelopers().stream().filter(developer -> Objects.equals(developer.getId(), id)).findFirst();
     }
 
     @Override
     public boolean existById(Long id) {
-        List<Developer> developerList = getAllDevelopers();
-        return developerList.stream().anyMatch(developer -> Objects.equals(developer.getId(), id));
+        return getAllDevelopers().stream().anyMatch(developer -> Objects.equals(developer.getId(), id));
     }
 
     @Override
@@ -128,7 +130,6 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
 
     private List<Developer> getAllDevelopers() {
         List<Developer> developers = new ArrayList<>();
-
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(FILE_DEVELOPERS))) {
             developers = reader.lines()
                     .map(s -> gson.fromJson(s, Developer.class))
@@ -146,19 +147,6 @@ public class DeveloperRepository implements CrudRepository<Developer, Long> {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-    private <S extends Developer> void saveNewDeveloper(S saveDeveloper, Map<Long, Developer> developerMap, List<Developer> developersList) {
-        Developer developer = new Developer();
-        developer.setId(0L);
-        if (saveDeveloper.getId() == null) {
-            saveDeveloper.setId(developersList.stream()
-                    .max(Comparator.comparing(Developer::getId)).orElse(developer)
-                    .getId() + 1L);
-            developerMap.put(saveDeveloper.getId(), saveDeveloper);
-            developersList.add(saveDeveloper);
-        } else {
-            developerMap.put(saveDeveloper.getId(), saveDeveloper);
         }
     }
 }
