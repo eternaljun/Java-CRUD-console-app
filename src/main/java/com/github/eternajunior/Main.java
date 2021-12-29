@@ -5,6 +5,7 @@ import com.github.eternajunior.model.AccountStatus;
 import com.github.eternajunior.model.Developer;
 import com.github.eternajunior.model.Skill;
 import com.github.eternajunior.repository.DeveloperRepository;
+import com.github.eternajunior.repository.SkillRepository;
 import com.google.gson.Gson;
 
 import java.util.*;
@@ -35,7 +36,7 @@ public class Main {
         developer.setSkills(skillSet);
         Gson gson = new Gson();
         String json = gson.toJson(developer);
-        DeveloperRepository developerRepository = new DeveloperRepository();
+        DeveloperRepository developerRepository = new DeveloperRepository("files\\developers.txt", gson);
         Developer developer2 = new Developer();
         developer2.setId(26L);
         developer2.setAccount(account);
@@ -43,14 +44,22 @@ public class Main {
         List<Developer> list = new ArrayList<>();
         list.add(developer);
         list.add(developer2);
-        Iterable<Developer> iterable = list;
-        developerRepository.saveAll(iterable);
+//        developerRepository.saveAll(iterable);
+        List<Long> listID = new ArrayList<>();
+        listID.add(1L);
+        listID.add(26L);
+        Iterable<Long> iterableId = listID;
+        //developerRepository.deleteAll();
         List<Long> longList = new ArrayList<>();
         longList.add(12L);
         longList.add(13L);
         longList.add(14L);
-        //developerRepository.save();
+//        developerRepository.save();
 
+
+        SkillRepository skillRepository = new SkillRepository("files\\skills.txt", gson);
+        skillRepository.saveAll(List.of(skill));
+        //developerRepository1.deleteById(1L);
         //System.out.println(developerRepository.count());
         //developerRepository.save(developer);
         //Optional<Developer> developerOptional = developerRepository.findById(1L);

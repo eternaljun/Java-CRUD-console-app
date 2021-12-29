@@ -2,6 +2,9 @@ package com.github.eternajunior.core;
 
 import com.github.eternajunior.model.Developer;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,4 +30,5 @@ public interface CrudRepository<T, ID> {
     void deleteAll(Iterable<? extends T> var1);
 
     void deleteAll();
+
 }
